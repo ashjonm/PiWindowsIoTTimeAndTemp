@@ -4,6 +4,8 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Windows.System.Threading;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -14,7 +16,7 @@ namespace WindowIotTempMonitor
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private IDHTTemperatureAndHumiditySensor _sensor;
+        private TemperaturePolling _tempPolling;
         private int _counter; 
 
         public UpdatingText Time;
@@ -26,7 +28,7 @@ namespace WindowIotTempMonitor
         {
             InitializeComponent();
             
-            _sensor = DeviceFactory.Build.DHTTemperatureAndHumiditySensor(Pin.DigitalPin8, DHTModel.Dht11);
+            _tempPolling = new TemperaturePolling();
             _counter = 0; 
 
             Time = UpdatingText.CreateNewTimeAndTemp();
@@ -35,16 +37,27 @@ namespace WindowIotTempMonitor
             Counter = UpdatingText.CreateNewTimeAndTemp();
 
             UpdateText();
+            StartTimer();
         }
 
+        private void StartTimer()
+        {
+            TimeSpan period = TimeSpan.FromSeconds(60);
+
+            ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
+            {
+                UpdateText();
+            }, period);
+        }
+        
         private void UpdateText()
         {
-            _sensor.Measure();
+            var entry = _tempPolling.GetTimeAndTemp();
             _counter++;
             
-            Time.Text = GetTime();
-            Tempurature.Text = GetTemperatureReading();
-            Humidity.Text = GetHumidityReading();
+            Time.Text = FormatTime(entry.Time);
+            Tempurature.Text = FormatTemperature(entry.Temperature);
+            Humidity.Text = FormatHumidity(entry.Humidity);
             Counter.Text = _counter.ToString();
         }
 
@@ -53,24 +66,24 @@ namespace WindowIotTempMonitor
             UpdateText();
         }
 
-        private string GetDate()
+        private string FormatDate(DateTime dateTime)
         {
-            return DateTime.Today.ToString("D");
+            return dateTime.ToString("D");
         }
 
-        private string GetTime()
+        private string FormatTime(DateTime dateTime)
         {
-            return DateTime.Now.ToString("hh:mm:ss tt", CultureInfo.InvariantCulture);
+            return dateTime.ToString("hh:mm:ss tt", CultureInfo.InvariantCulture);
         }
 
-        private string GetTemperatureReading()
+        private string FormatTemperature(decimal temp)
         {
-            return string.Format("Temp: {0}F", _sensor.TemperatureInFahrenheit);
+            return string.Format("Temp: {0}F", temp);
         }
 
-        private string GetHumidityReading()
+        private string FormatHumidity(decimal humidity)
         {
-            return string.Format("Humidity: {0}%", _sensor.Humidity);
+            return string.Format("Humidity: {0}%", humidity);
         }
     }
 
