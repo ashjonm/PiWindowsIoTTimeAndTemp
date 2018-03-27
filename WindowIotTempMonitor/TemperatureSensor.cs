@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace WindowIotTempMonitor
 {
-    public class TemperaturePolling
+    public class TemperatureSensor
     {
         private IDHTTemperatureAndHumiditySensor _sensor;
 
-        public TemperaturePolling()
+        public TemperatureSensor()
         {
             _sensor = DeviceFactory.Build.DHTTemperatureAndHumiditySensor(Pin.DigitalPin8, DHTModel.Dht11);
         }

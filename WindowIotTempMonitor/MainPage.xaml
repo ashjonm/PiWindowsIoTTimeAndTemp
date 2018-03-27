@@ -31,15 +31,6 @@
                    Foreground="AntiqueWhite"
                    Margin="0 0 0 50"
                    Text="{x:Bind Humidity.Text, Mode=OneWay}"/>
-        <TextBlock HorizontalAlignment="Right"
-                   VerticalAlignment="Top"
-                   Height="100"
-                   Width="100"
-                   Margin="0 0 10 0"
-                   FontSize="50"
-                   TextAlignment="right"
-                   Foreground="AntiqueWhite"
-                   Text="{x:Bind Counter.Text, Mode=OneWay}"/>
         <Button Content="Refresh" 
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
@@ -47,7 +38,7 @@
                 Height="100"
                 FontSize="50"
                 Foreground="AntiqueWhite"
-                Margin="0,0,50,0" 
-                Click="Button_Click"/>
+                Margin="0,0,0,0" 
+                Click="Button_Click" RenderTransformOrigin="1.001,0.491"/>
     </Grid>
 </Page>

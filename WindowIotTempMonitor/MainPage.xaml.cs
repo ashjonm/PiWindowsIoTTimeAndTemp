@@ -1,11 +1,8 @@
-﻿using GrovePi;
-using GrovePi.Sensors;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using Windows.System.Threading;
-using Windows.UI.Core;
+using System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -16,54 +13,55 @@ namespace WindowIotTempMonitor
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private TemperaturePolling _tempPolling;
-        private int _counter; 
+        private TemperatureSensor _sensor;
+        private Timer _timeTimer;
+        private Timer _tempTimer;
 
         public UpdatingText Time;
         public UpdatingText Tempurature;
         public UpdatingText Humidity;
-        public UpdatingText Counter; 
 
         public MainPage()
         {
             InitializeComponent();
-            
-            _tempPolling = new TemperaturePolling();
-            _counter = 0; 
+            _sensor = new TemperatureSensor();
 
             Time = UpdatingText.CreateNewTimeAndTemp();
             Tempurature = UpdatingText.CreateNewTimeAndTemp();
             Humidity = UpdatingText.CreateNewTimeAndTemp();
-            Counter = UpdatingText.CreateNewTimeAndTemp();
 
-            UpdateText();
-            StartTimer();
+            UpdateTempData();
+            _timeTimer = new Timer(new TimerCallback((obj) => RefreshTime()), null, 0, 1000);
+            _tempTimer = new Timer(new TimerCallback((obj) => RefreshTemp()), null, 0, 30500);
         }
 
-        private void StartTimer()
+        private async void RefreshTemp()
         {
-            TimeSpan period = TimeSpan.FromSeconds(60);
-
-            ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
-            {
-                UpdateText();
-            }, period);
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, UpdateTempData);
         }
-        
-        private void UpdateText()
+
+        private void UpdateTempData()
         {
-            var entry = _tempPolling.GetTimeAndTemp();
-            _counter++;
-            
+            var entry = _sensor.GetTimeAndTemp();
+                        
             Time.Text = FormatTime(entry.Time);
             Tempurature.Text = FormatTemperature(entry.Temperature);
             Humidity.Text = FormatHumidity(entry.Humidity);
-            Counter.Text = _counter.ToString();
+        }
+
+        private async void RefreshTime()
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, UpdateTimeData);
+        }
+
+        private void UpdateTimeData()
+        {
+            Time.Text = FormatTime(DateTime.Now);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            UpdateText();
+            UpdateTempData();
         }
 
         private string FormatDate(DateTime dateTime)
